@@ -22,7 +22,7 @@ class Role extends Model
 
     public function responsabilites()
     {
-        return $this->hasMany(Responsability::class);
+        return $this->hasMany(Responsibility::class);
     }
 
     public function employees()
