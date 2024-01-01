@@ -13,14 +13,18 @@ use Illuminate\Support\Facades\Auth;
 
 class CompanyController extends Controller
 {
-    public function all(Request $request)
+    public function fetch(Request $request)
     {
         $id = $request->input('id');
         $limit = $request->input('limit', 10);
         $name = $request->input('name');
 
+        $companyQuery = Company::with(['users'])->whereHas("users", function ($query) {
+            $query->where("user_id", Auth::id());
+        });
+
         if ($id) {
-            $company = Company::with(['users'])->find($id);
+            $company = $companyQuery->find($id);
 
             if ($company) {
                 return ResponseFormatter::success($company, "Company found");
@@ -29,7 +33,7 @@ class CompanyController extends Controller
             return ResponseFormatter::error('Company not found', 404);
         }
 
-        $companies = Company::with(["users"]);
+        $companies = $companyQuery;
 
         if ($name) {
             $companies->where('name', 'like', '%' . $name . '%');
@@ -64,6 +68,29 @@ class CompanyController extends Controller
             $company->load("users");
 
             return ResponseFormatter::success($company, "Company created");
+        } catch (Exception $e) {
+            return ResponseFormatter::error($e->getMessage(), 500);
+        }
+    }
+
+    public function update(CompanyRequest $request, $id) {
+        try {
+            $company = Company::find($id);
+
+            if(!$company) {
+                throw new Exception("Company not found");
+            }
+
+            if ($request->hasFile("logo")) {
+                $path = $request->file("logo")->store("public/images");
+            }
+
+            $company->update([
+                "name" => $request->name,
+                "logo" => $path
+            ]);
+
+            return ResponseFormatter::success($company, "Company updated");
         } catch (Exception $e) {
             return ResponseFormatter::error($e->getMessage(), 500);
         }
