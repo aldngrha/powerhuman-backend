@@ -78,7 +78,7 @@ class TeamController extends Controller
 
             $team->update([
                 "name" => $request->name,
-                "icon" => $path,
+                "icon" => isset($path) ? $path : $team->icon,
                 "company_id" => $request->company_id,
             ]);
 
@@ -99,7 +99,7 @@ class TeamController extends Controller
 
             $team->delete();
 
-            return ResponseFormatter::success(_, "Team deleted");
+            return ResponseFormatter::success(null, "Team deleted");
         } catch (Exception $e) {
             return ResponseFormatter::error($e->getMessage(), 500);
         }
